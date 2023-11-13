@@ -13,6 +13,9 @@ tags:
     description: Operations related to subscriptions
   - name: Subscription Events
     description: Operations related to subscription events
+  - name: Environment Promotions
+    description: Operations related to promoting webhooks between environments
+
     
 paths:
   /webhooks:
