@@ -1,11 +1,24 @@
 openapi: 3.0.0
 info:
-  title: Webhook API
+  title: Webhook and Subscription API
   version: 1.0.0
-  description: API for webhook registration, verification, and management
+  description: API for webhook and subscription management
+
+tags:
+  - name: Webhooks
+    description: Operations related to webhooks
+  - name: Subscriptions
+    description: Operations related to subscriptions
+  - name: Subscription Events
+    description: Operations related to subscription Events
+  - name: Environment promotions
+    description: Operations related to environment promotions
+    
 paths:
   /webhooks:
     post:
+      tags:
+        - Webhooks
       summary: Register a webhook
       description: Allows customers to register a webhook with configurations.
       requestBody:
@@ -21,19 +34,19 @@ paths:
               schema:
                 $ref: '#/components/schemas/WebhookRegistrationResponse'
     get:
+      tags:
+        - Webhooks
       summary: Get webhook data
       description: Retrieve webhook data based on webhook name or organization name.
       parameters:
         - name: webhookName
           in: query
           description: Webhook name
-          required: false
           schema:
             type: string
         - name: orgName
           in: query
           description: Organization name
-          required: false
           schema:
             type: string
       responses:
@@ -42,9 +55,70 @@ paths:
           content:
             application/json:
               schema:
+                $ref: '#/components/schemas/WebhookListDataResponse'
+
+  /webhooks/{webhookId}:
+    get:
+      tags:
+        - Webhooks
+      summary: Get a Webhook
+      description: Retrieve details of a specific webhook.
+      parameters:
+        - name: webhookId
+          in: path
+          description: Unique identifier of the subscription
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Webhook details retrieved successfully
+          content:
+            application/json:
+              schema:
                 $ref: '#/components/schemas/WebhookDataResponse'
+    delete:
+      tags:
+        - Webhooks
+      summary: Delete a webhook
+      description: Delete a registered webhook. If associated with any subscription, it won't be deleted.
+      parameters:
+        - name: webhookId
+          in: path
+          description: Unique identifier of the registered webhook
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Webhook deleted successfully
+        '400':
+          description: Bad request - Webhook associated with a subscription
+    patch:
+      tags:
+        - Webhooks
+      summary: Update a webhook
+      description: Update the details of a registered webhook.
+      parameters:
+        - name: webhookId
+          in: path
+          description: Unique identifier of the registered webhook
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookUpdateRequest'
+      responses:
+        '200':
+          description: Webhook updated successfully
+
   /webhooks/{webhookId}/test:
     post:
+      tags:
+        - Webhooks
       summary: Test the webhook
       description: Allows customers to test a registered webhook by echoing the message sent.
       parameters:
@@ -66,29 +140,95 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/WebhookTestResponse'
-  /webhooks/{webhookId}:
-    delete:
-      summary: Delete a webhook
-      description: Delete a registered webhook. If associated with any subscription, it won't be deleted.
+
+  /subscriptions:
+    post:
+      tags:
+        - Subscriptions
+      summary: Create a subscription
+      description: Create a new subscription with specified details.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Subscription'
+      responses:
+        '200':
+          description: Subscription created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionResponse'
+    get:
+      tags:
+        - Subscriptions
+      summary: Get all subscriptions
+      description: Retrieve all subscriptions.
       parameters:
-        - name: webhookId
+        - name: subscriptionName
+          in: query
+          description: Subscription name
+          schema:
+            type: string
+        - name: orgName
+          in: query
+          description: Organization name
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Subscriptions retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionListResponse'
+
+  /subscriptions/{subscriptionId}:
+    get:
+      tags:
+        - Subscriptions
+      summary: Get a subscription
+      description: Retrieve details of a specific subscription.
+      parameters:
+        - name: subscriptionId
           in: path
-          description: Unique identifier of the registered webhook
+          description: Unique identifier of the subscription
           required: true
           schema:
             type: string
       responses:
         '200':
-          description: Webhook deleted successfully
-        '400':
-          description: Bad request - Webhook associated with a subscription
-    patch:
-      summary: Update a webhook
-      description: Update the details of a registered webhook.
+          description: Subscription details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionResponse'
+    delete:
+      tags:
+        - Subscriptions
+      summary: Delete a subscription
+      description: Delete a specific subscription.
       parameters:
-        - name: webhookId
+        - name: subscriptionId
           in: path
-          description: Unique identifier of the registered webhook
+          description: Unique identifier of the subscription
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Subscription deleted successfully
+        '400':
+          description: Bad request - Subscription associated with a webhook
+    patch:
+      tags:
+        - Subscriptions
+      summary: Update a subscription
+      description: Update the details of a specific subscription.
+      parameters:
+        - name: subscriptionId
+          in: path
+          description: Unique identifier of the subscription
           required: true
           schema:
             type: string
@@ -96,113 +236,129 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/WebhookUpdateRequest'
+              $ref: '#/components/schemas/SubscriptionUpdateRequest'
       responses:
         '200':
-          description: Webhook updated successfully
+          description: Subscription updated successfully
+
 components:
   schemas:
     WebhookRegistration:
       type: object
       properties:
-        name:
-          type: string
-          description: Webhook name
         url:
           type: string
-          description: Webhook URL
         retryCount:
           type: integer
-          description: Number of retry attempts
         authHeader:
           type: string
-          description: Authorization header value
         customHeaders:
           type: object
-          description: Custom headers (Map)
         useCustomSSL:
           type: boolean
-          description: Use custom SSL certificate
         customSSLCertificate:
           type: string
           format: binary
-          description: Custom SSL certificate file (Upload file)
-        tokenValidity:
-          type: integer
-          description: Token validity in seconds
     WebhookUpdateRequest:
       type: object
       properties:
-        name:
-          type: string
-          description: Webhook name
         url:
           type: string
-          description: Webhook URL
         retryCount:
           type: integer
-          description: Number of retry attempts
         authHeader:
           type: string
-          description: Authorization header value
         customHeaders:
           type: object
-          description: Custom headers (Map)
         useCustomSSL:
           type: boolean
-          description: Use custom SSL certificate
         customSSLCertificate:
           type: string
           format: binary
-          description: Custom SSL certificate file (Upload file)
-        tokenValidity:
-          type: integer
-          description: Token validity in seconds
     WebhookRegistrationResponse:
       type: object
       properties:
         webhookId:
           type: string
-          description: Unique identifier for the registered webhook
     WebhookTestRequest:
       type: object
       properties:
         message:
           type: string
-          description: Message to be sent for webhook testing
     WebhookTestResponse:
       type: object
       properties:
         echoedMessage:
           type: string
-          description: Echoed message from the webhook test
     WebhookDataResponse:
       type: object
       properties:
         webhookId:
           type: string
-          description: Unique identifier for the registered webhook
-        name:
-          type: string
-          description: Webhook name
         url:
           type: string
-          description: Webhook URL
         retryCount:
           type: integer
-          description: Number of retry attempts
         authHeader:
           type: string
-          description: Authorization header value
         customHeaders:
           type: object
-          description: Custom headers (Map)
         useCustomSSL:
           type: boolean
-          description: Use custom SSL certificate
         tokenValidity:
           type: integer
-          description: Token validity in seconds
+    Subscription:
+      type: object
+      properties:
+        name:
+          type: string
+        subscribedEntityName:
+          type: string
+        metadataResponse:
+          type: object
+        transformationConfig:
+          type: object
+        webhookId:
+          type: string
+        status:
+          type: string
+          enum:
+            - active
+            - paused
+            - inactive
+    SubscriptionResponse:
+      type: object
+      properties:
+        subscriptionId:
+          type: string
+    SubscriptionListResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/Subscription'
+    
+    WebhookListDataResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/WebhookDataResponse'
+    SubscriptionUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        subscribedEntityName:
+          type: string
+        metadataResponse:
+          type: object
+        transformationConfig:
+          type: object
+        webhookId:
+          type: string
+        status:
+          type: string
+          enum:
+            - active
+            - paused
+            - inactive
 servers:
   # Added by API Auto Mocking Plugin
   - description: SwaggerHub API Auto Mocking
