@@ -272,6 +272,92 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TransformationListResponse'
+  /subscription-events/last-published-record:
+    get:
+      tags:
+        - Subscription Events
+      summary: Get the last published record for a subscription
+      description: Retrieve the last published record for a subscription if the subscription ID is provided.
+      parameters:
+        - name: subscriptionId
+          in: query
+          description: Unique identifier of the subscription
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Last published record retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LastPublishedRecordResponse'
+        '404':
+          description: No published records found for the given subscription
+  /subscription-events/publishing-delay:
+    get:
+      tags:
+        - Subscription Events
+      summary: Get the delay in publishing via webhook
+      description: Retrieve the delay in publishing via webhook for a subscription if the subscription ID is provided.
+      parameters:
+        - name: subscriptionId
+          in: query
+          description: Unique identifier of the subscription
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Publishing delay retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublishingDelayResponse'
+        '404':
+          description: No published records found for the given subscription
+  /subscription-events/message-statistics:
+    get:
+      tags:
+        - Subscription Events
+      summary: Get message statistics for a subscription
+      description: Retrieve the number of messages pushed in a time window or the current rate of messages for a subscription if the subscription ID is provided.
+      parameters:
+        - name: subscriptionId
+          in: query
+          description: Unique identifier of the subscription
+          required: true
+          schema:
+            type: string
+        - name: timeWindow
+          in: query
+          description: Time window for message statistics (in seconds)
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Message statistics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageStatisticsResponse'
+        '404':
+          description: No published records found for the given subscription
+  /environment-promotions/promote-subscription:
+    post:
+      tags:
+        - Environment Promotions
+      summary: Promote subscription to a different environment
+      description: Promote a subscription, along with its associated webhook, to a specified environment.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PromotionRequest'
+      responses:
+        '200':
+          description: Subscription promoted successfully
 
 components:
   schemas:
@@ -481,6 +567,37 @@ components:
       properties:
         mergeConfigId:
           type: string  # Define the structure of the merge config response
+    LastPublishedRecordResponse:
+      type: object
+      properties:
+        lastPublishedRecord:
+          type: object  # Define the structure of the last published record
+    PublishingDelayResponse:
+      type: object
+      properties:
+        publishingDelay:
+          type: integer  # Define the structure of the publishing delay
+    MessageStatisticsResponse:
+      type: object
+      properties:
+        messageCount:
+          type: integer  # Define the structure of the message statistics
+        currentRate:
+          type: number   # Define the structure of the current rate
+    PromotionRequest:
+      type: object
+      properties:
+        subscriptionId:
+          type: string
+          description: Unique identifier of the subscription to be promoted
+        arableEnvironmentName:
+          type: string
+          description: Name of the target environment for promotion
+          enum:
+            - Prod(ALP)
+            - Stage(ALS)
+            - Test(ALT)
+            - Dev(ALD)
 
 servers:
   # Added by API Auto Mocking Plugin
