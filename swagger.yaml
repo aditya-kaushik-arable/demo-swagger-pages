@@ -5,14 +5,14 @@ info:
   description: API for webhook and subscription management
 
 tags:
+  - name: Metadata Operations
+    description: Operations related to metadata
   - name: Webhooks
     description: Operations related to webhooks
   - name: Subscriptions
     description: Operations related to subscriptions
   - name: Subscription Events
-    description: Operations related to subscription Events
-  - name: Environment promotions
-    description: Operations related to environment promotions
+    description: Operations related to subscription events
     
 paths:
   /webhooks:
@@ -55,28 +55,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/WebhookListDataResponse'
-
-  /webhooks/{webhookId}:
-    get:
-      tags:
-        - Webhooks
-      summary: Get a Webhook
-      description: Retrieve details of a specific webhook.
-      parameters:
-        - name: webhookId
-          in: path
-          description: Unique identifier of the subscription
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Webhook details retrieved successfully
-          content:
-            application/json:
-              schema:
                 $ref: '#/components/schemas/WebhookDataResponse'
+  /webhooks/{webhookId}:
     delete:
       tags:
         - Webhooks
@@ -114,7 +94,6 @@ paths:
       responses:
         '200':
           description: Webhook updated successfully
-
   /webhooks/{webhookId}/test:
     post:
       tags:
@@ -140,7 +119,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/WebhookTestResponse'
-
   /subscriptions:
     post:
       tags:
@@ -164,17 +142,6 @@ paths:
         - Subscriptions
       summary: Get all subscriptions
       description: Retrieve all subscriptions.
-      parameters:
-        - name: subscriptionName
-          in: query
-          description: Subscription name
-          schema:
-            type: string
-        - name: orgName
-          in: query
-          description: Organization name
-          schema:
-            type: string
       responses:
         '200':
           description: Subscriptions retrieved successfully
@@ -182,7 +149,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SubscriptionListResponse'
-
   /subscriptions/{subscriptionId}:
     get:
       tags:
@@ -240,6 +206,72 @@ paths:
       responses:
         '200':
           description: Subscription updated successfully
+    post:
+      tags:
+        - Subscriptions
+      summary: Assign a webhook to a subscription
+      description: Assign a webhook to a specific subscription.
+      parameters:
+        - name: subscriptionId
+          in: path
+          description: Unique identifier of the subscription
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookAssignmentRequest'
+      responses:
+        '200':
+          description: Webhook assigned to the subscription successfully
+        '400':
+          description: Bad request - Webhook or subscription not found or already assigned
+  /metadata/entities:
+    get:
+      tags:
+        - Metadata Operations
+      summary: Get list of entity names
+      description: Retrieve a list of entity names that can be subscribed.
+      responses:
+        '200':
+          description: List of entity names retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EntityListResponse'
+  /metadata/entities/merge-config:
+    post:
+      tags:
+        - Metadata Operations
+      summary: Create entities with merge logic
+      description: Create entities by defining merge logic for existing entities.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MergeConfigRequest'
+      responses:
+        '200':
+          description: Entities created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MergeConfigResponse' 
+  /metadata/transformations:
+    get:
+      tags:
+        - Metadata Operations
+      summary: Get list of available transformations
+      description: Retrieve a list of transformations that can be applied on the response payload of a subscription.
+      responses:
+        '200':
+          description: List of transformations retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransformationListResponse'
 
 components:
   schemas:
@@ -318,8 +350,6 @@ components:
           type: object
         transformationConfig:
           type: object
-        webhookId:
-          type: string
         status:
           type: string
           enum:
@@ -335,11 +365,6 @@ components:
       type: array
       items:
         $ref: '#/components/schemas/Subscription'
-    
-    WebhookListDataResponse:
-      type: array
-      items:
-        $ref: '#/components/schemas/WebhookDataResponse'
     SubscriptionUpdateRequest:
       type: object
       properties:
@@ -351,14 +376,112 @@ components:
           type: object
         transformationConfig:
           type: object
-        webhookId:
-          type: string
         status:
           type: string
           enum:
             - active
             - paused
             - inactive
+    WebhookAssignmentRequest:
+      type: object
+      properties:
+        webhookId:
+          type: string
+    TransformationListResponse:
+      type: array
+      items:
+        type: object
+        properties:
+          transformationType:
+            type: string
+            description: Type of transformation
+            enum:
+              - unit_conversion
+              - aggregation_splitting
+              - datatype_transformation
+              - name_transformation
+          sourceColumn:
+            type: string
+            description: Source column for the transformation
+          transformationConfig:
+            type: object
+            description: Configuration specific to the transformation type
+            properties:
+              # Define properties specific to Unit Transformation
+              unitType:
+                type: string
+                description: Type of unit conversion (e.g., meters to feet)
+
+              # Define properties specific to Aggregation and Splitting
+              aggregationType:
+                type: string
+                description: Type of aggregation (e.g., sum, average)
+              splitDelimiter:
+                type: string
+                description: Delimiter for splitting
+
+              # Define properties specific to Datatype Transformation
+              targetType:
+                type: string
+                description: Target datatype (e.g., string, integer, float)
+
+              # Define properties specific to Name Transformation
+              newName:
+                type: string
+                description: New name after transformation
+    EntityAttributeResponse:
+      type: object
+      properties:
+        name:
+          type: string
+        datatype:
+          type: string
+    EntityResponse:
+      type: object
+      properties:
+        name:
+          type: string
+        type: 
+          type: string
+          enum:
+              - single entity
+              - merged entity
+        columns:
+          type: array
+          items:
+            $ref: '#/components/schemas/EntityAttributeResponse'
+    EntityListResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/EntityResponse'  # Define the structure of the entity names list
+    MergeConfigJoinRequest:
+      type: object
+      properties:
+        mergeFieldSource:
+          type: string
+        mergeFieldTarget:
+          type: string
+        mergeOperation:
+          type: string 
+    MergeConfigRequest:
+      type: object
+      properties:
+        entityName:
+          type: string
+        sourceEntity:
+          type: string
+        targetEntity:
+          type: string
+        mergeOperation:
+          type: array 
+          items:
+            $ref: '#/components/schemas/MergeConfigJoinRequest' # Define the structure of the merge config
+    MergeConfigResponse:
+      type: object
+      properties:
+        mergeConfigId:
+          type: string  # Define the structure of the merge config response
+
 servers:
   # Added by API Auto Mocking Plugin
   - description: SwaggerHub API Auto Mocking
