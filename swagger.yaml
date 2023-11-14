@@ -1,50 +1,50 @@
 openapi: 3.0.0
 info:
-  title: Webhook and Subscription API
+  title: CallbackUrl and Subscription API
   version: 1.0.0
-  description: API for webhook and subscription management
+  description: API for callbackUrl and subscription management
 
 tags:
   - name: Metadata Operations
     description: Operations related to metadata
-  - name: Webhooks
-    description: Operations related to webhooks
+  - name: CallbackUrls
+    description: Operations related to callbackUrls
   - name: Subscriptions
     description: Operations related to subscriptions
   - name: Subscription Events
     description: Operations related to subscription events
   - name: Environment Promotions
-    description: Operations related to promoting webhooks between environments
+    description: Operations related to promoting callbackUrls between environments
 
     
 paths:
-  /webhooks:
+  /callbackUrls:
     post:
       tags:
-        - Webhooks
-      summary: Register a webhook
-      description: Allows customers to register a webhook with configurations.
+        - CallbackUrls
+      summary: Register a callbackUrl
+      description: Allows customers to register a callbackUrl with configurations.
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/WebhookRegistration'
+              $ref: '#/components/schemas/CallbackUrlRegistration'
       responses:
         '200':
-          description: Webhook registered successfully
+          description: CallbackUrl registered successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/WebhookRegistrationResponse'
+                $ref: '#/components/schemas/CallbackUrlRegistrationResponse'
     get:
       tags:
-        - Webhooks
-      summary: Get webhook data
-      description: Retrieve webhook data based on webhook name or organization name.
+        - CallbackUrls
+      summary: Get callbackUrl data
+      description: Retrieve callbackUrl data based on callbackUrl name or organization name.
       parameters:
-        - name: webhookName
+        - name: callbackUrlName
           in: query
-          description: Webhook name
+          description: CallbackUrl name
           schema:
             type: string
         - name: orgName
@@ -54,38 +54,38 @@ paths:
             type: string
       responses:
         '200':
-          description: Webhook data retrieved successfully
+          description: CallbackUrl data retrieved successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/WebhookDataResponse'
-  /webhooks/{webhookId}:
+                $ref: '#/components/schemas/CallbackUrlDataResponse'
+  /callbackUrls/{callbackUrlId}:
     delete:
       tags:
-        - Webhooks
-      summary: Delete a webhook
-      description: Delete a registered webhook. If associated with any subscription, it won't be deleted.
+        - CallbackUrls
+      summary: Delete a callbackUrl
+      description: Delete a registered callbackUrl. If associated with any subscription, it won't be deleted.
       parameters:
-        - name: webhookId
+        - name: callbackUrlId
           in: path
-          description: Unique identifier of the registered webhook
+          description: Unique identifier of the registered callbackUrl
           required: true
           schema:
             type: string
       responses:
         '200':
-          description: Webhook deleted successfully
+          description: CallbackUrl deleted successfully
         '400':
-          description: Bad request - Webhook associated with a subscription
+          description: Bad request - CallbackUrl associated with a subscription
     patch:
       tags:
-        - Webhooks
-      summary: Update a webhook
-      description: Update the details of a registered webhook.
+        - CallbackUrls
+      summary: Update a callbackUrl
+      description: Update the details of a registered callbackUrl.
       parameters:
-        - name: webhookId
+        - name: callbackUrlId
           in: path
-          description: Unique identifier of the registered webhook
+          description: Unique identifier of the registered callbackUrl
           required: true
           schema:
             type: string
@@ -93,20 +93,20 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/WebhookUpdateRequest'
+              $ref: '#/components/schemas/CallbackUrlUpdateRequest'
       responses:
         '200':
-          description: Webhook updated successfully
-  /webhooks/{webhookId}/test:
+          description: CallbackUrl updated successfully
+  /callbackUrls/{callbackUrlId}/test:
     post:
       tags:
-        - Webhooks
-      summary: Test the webhook
-      description: Allows customers to test a registered webhook by echoing the message sent.
+        - CallbackUrls
+      summary: Test the callbackUrl
+      description: Allows customers to test a registered callbackUrl by echoing the message sent.
       parameters:
-        - name: webhookId
+        - name: callbackUrlId
           in: path
-          description: Unique identifier of the registered webhook
+          description: Unique identifier of the registered callbackUrl
           required: true
           schema:
             type: string
@@ -114,14 +114,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/WebhookTestRequest'
+              $ref: '#/components/schemas/CallbackUrlTestRequest'
       responses:
         '200':
-          description: Webhook test successful
+          description: CallbackUrl test successful
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/WebhookTestResponse'
+                $ref: '#/components/schemas/CallbackUrlTestResponse'
   /subscriptions:
     post:
       tags:
@@ -188,7 +188,7 @@ paths:
         '200':
           description: Subscription deleted successfully
         '400':
-          description: Bad request - Subscription associated with a webhook
+          description: Bad request - Subscription associated with a callbackUrl
     patch:
       tags:
         - Subscriptions
@@ -212,8 +212,8 @@ paths:
     post:
       tags:
         - Subscriptions
-      summary: Assign a webhook to a subscription
-      description: Assign a webhook to a specific subscription.
+      summary: Assign a callbackUrl to a subscription
+      description: Assign a callbackUrl to a specific subscription.
       parameters:
         - name: subscriptionId
           in: path
@@ -225,12 +225,12 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/WebhookAssignmentRequest'
+              $ref: '#/components/schemas/CallbackUrlAssignmentRequest'
       responses:
         '200':
-          description: Webhook assigned to the subscription successfully
+          description: CallbackUrl assigned to the subscription successfully
         '400':
-          description: Bad request - Webhook or subscription not found or already assigned
+          description: Bad request - CallbackUrl or subscription not found or already assigned
   /metadata/entities:
     get:
       tags:
@@ -274,7 +274,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TransformationListResponse'
+                $ref: '#/components/schemas/ColumnTransformationListResponse'
   /subscription-events/last-published-record:
     get:
       tags:
@@ -301,8 +301,8 @@ paths:
     get:
       tags:
         - Subscription Events
-      summary: Get the delay in publishing via webhook
-      description: Retrieve the delay in publishing via webhook for a subscription if the subscription ID is provided.
+      summary: Get the delay in publishing via callbackUrl
+      description: Retrieve the delay in publishing via callbackUrl for a subscription if the subscription ID is provided.
       parameters:
         - name: subscriptionId
           in: query
@@ -352,7 +352,7 @@ paths:
       tags:
         - Environment Promotions
       summary: Promote subscription to a different environment
-      description: Promote a subscription, along with its associated webhook, to a specified environment.
+      description: Promote a subscription, along with its associated callbackUrl, to a specified environment.
       requestBody:
         content:
           application/json:
@@ -364,7 +364,7 @@ paths:
 
 components:
   schemas:
-    WebhookRegistration:
+    CallbackUrlRegistration:
       type: object
       properties:
         url:
@@ -380,7 +380,7 @@ components:
         customSSLCertificate:
           type: string
           format: binary
-    WebhookUpdateRequest:
+    CallbackUrlUpdateRequest:
       type: object
       properties:
         url:
@@ -396,25 +396,25 @@ components:
         customSSLCertificate:
           type: string
           format: binary
-    WebhookRegistrationResponse:
+    CallbackUrlRegistrationResponse:
       type: object
       properties:
-        webhookId:
+        callbackUrlId:
           type: string
-    WebhookTestRequest:
+    CallbackUrlTestRequest:
       type: object
       properties:
         message:
           type: string
-    WebhookTestResponse:
+    CallbackUrlTestResponse:
       type: object
       properties:
         echoedMessage:
           type: string
-    WebhookDataResponse:
+    CallbackUrlDataResponse:
       type: object
       properties:
-        webhookId:
+        callbackUrlId:
           type: string
         url:
           type: string
@@ -433,12 +433,22 @@ components:
       properties:
         name:
           type: string
+        orgName:
+          type: string
+        teamName:
+          type: string
         subscribedEntityName:
           type: string
         metadataResponse:
           type: object
-        transformationConfig:
-          type: object
+        columnTransformationConfig:
+          type: array
+          items:
+            $ref: '#/components/schemas/ColumnTransformation'
+        columnFilterConfig:
+          type: array
+          items:
+            $ref: '#/components/schemas/ColumnFilter'
         status:
           type: string
           enum:
@@ -471,53 +481,69 @@ components:
             - active
             - paused
             - inactive
-    WebhookAssignmentRequest:
+    CallbackUrlAssignmentRequest:
       type: object
       properties:
-        webhookId:
+        callbackUrlId:
           type: string
-    TransformationListResponse:
+    ColumnTransformation:
+      type: object
+      properties:
+        sourseColumn:
+          type: string
+        transformationName:
+          type: string
+        nameTransformation: 
+          type: object
+          properties:
+            targetColumnName:
+              type: string
+        unitTransformation:
+          type: object
+          properties:
+            isCurrentColumnRequired:
+              type: boolean
+            targetColumns:
+              type: array
+              items:
+                type: object
+                properties:
+                  targetUnit:
+                    type: string
+                  targetColumnName:
+                    type: string
+        valueReplaceTransformation:
+          type: array
+          items:
+            type: object
+            properties:
+              operationType:
+                type: string
+                enum:
+                  - GreaterThan, GreaterThanAndEqualTo, LessThan, LessThanAndEqualTo, EqualTo
+              value:
+                type: string
+              dataType:
+                type: string
+                enum:
+                  - string
+                  - integer
+                  - decimal
+        valueFormatTransformation:
+          type: object
+          properties:
+            targetFormatType:
+              type: string
+              enum:
+                - DateFormat_%Y-%m-%dT%H:%M:%S%z
+                - StringTrim
+              
+                
+        
+    ColumnTransformationListResponse:
       type: array
       items:
-        type: object
-        properties:
-          transformationType:
-            type: string
-            description: Type of transformation
-            enum:
-              - unit_conversion
-              - aggregation_splitting
-              - datatype_transformation
-              - name_transformation
-          sourceColumn:
-            type: string
-            description: Source column for the transformation
-          transformationConfig:
-            type: object
-            description: Configuration specific to the transformation type
-            properties:
-              # Define properties specific to Unit Transformation
-              unitType:
-                type: string
-                description: Type of unit conversion (e.g., meters to feet)
-
-              # Define properties specific to Aggregation and Splitting
-              aggregationType:
-                type: string
-                description: Type of aggregation (e.g., sum, average)
-              splitDelimiter:
-                type: string
-                description: Delimiter for splitting
-
-              # Define properties specific to Datatype Transformation
-              targetType:
-                type: string
-                description: Target datatype (e.g., string, integer, float)
-
-              # Define properties specific to Name Transformation
-              newName:
-                type: string
-                description: New name after transformation
+        $ref: '#/components/schemas/ColumnTransformation'
     EntityAttributeResponse:
       type: object
       properties:
@@ -601,8 +627,30 @@ components:
             - Stage(ALS)
             - Test(ALT)
             - Dev(ALD)
+    ColumnFilter:
+      type: object
+      properties:
+        sourceColumnName:
+          type: string
+        operationType:
+          type: string
+          enum:
+            - GreaterThan, GreaterThanAndEqualTo, LessThan, LessThanAndEqualTo, EqualTo, Contains
+        value:
+          type: string
+        dataType:
+          type: string
+          enum:
+            - string
+            - integer
+            - decimal
+        
+        
 
 servers:
   # Added by API Auto Mocking Plugin
+  # Added by API Auto Mocking Plugin
   - description: SwaggerHub API Auto Mocking
     url: https://virtserver.swaggerhub.com/demo-arable/Webhooks/1.0.0
+  - description: SwaggerHub API Auto Mocking
+    url: https://virtserver.swaggerhub.com/demo-arable/CallbackUrls/1.0.0
