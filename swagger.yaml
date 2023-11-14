@@ -209,28 +209,6 @@ paths:
       responses:
         '200':
           description: Subscription updated successfully
-    post:
-      tags:
-        - Subscriptions
-      summary: Assign a callbackUrl to a subscription
-      description: Assign a callbackUrl to a specific subscription.
-      parameters:
-        - name: subscriptionId
-          in: path
-          description: Unique identifier of the subscription
-          required: true
-          schema:
-            type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CallbackUrlAssignmentRequest'
-      responses:
-        '200':
-          description: CallbackUrl assigned to the subscription successfully
-        '400':
-          description: Bad request - CallbackUrl or subscription not found or already assigned
   /metadata/entities:
     get:
       tags:
@@ -439,6 +417,8 @@ components:
           type: string
         subscribedEntityName:
           type: string
+        callbackUrlName:
+          type: string
         metadataResponse:
           type: object
         columnTransformationConfig:
@@ -469,12 +449,24 @@ components:
       properties:
         name:
           type: string
+        orgName:
+          type: string
+        teamName:
+          type: string
         subscribedEntityName:
+          type: string
+        callbackUrlName:
           type: string
         metadataResponse:
           type: object
-        transformationConfig:
-          type: object
+        columnTransformationConfig:
+          type: array
+          items:
+            $ref: '#/components/schemas/ColumnTransformation'
+        columnFilterConfig:
+          type: array
+          items:
+            $ref: '#/components/schemas/ColumnFilter'
         status:
           type: string
           enum:
@@ -489,7 +481,7 @@ components:
     ColumnTransformation:
       type: object
       properties:
-        sourseColumn:
+        sourceColumn:
           type: string
         transformationName:
           type: string
