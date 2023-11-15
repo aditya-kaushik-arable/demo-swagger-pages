@@ -5,123 +5,12 @@ info:
   description: API for callbackUrl and subscription management
 
 tags:
-  - name: Metadata Operations
-    description: Operations related to metadata
-  - name: CallbackUrls
-    description: Operations related to callbackUrls
   - name: Subscriptions
     description: Operations related to subscriptions
-  - name: Subscription Events
-    description: Operations related to subscription events
-  - name: Environment Promotions
-    description: Operations related to promoting callbackUrls between environments
-
+  - name: Entities
+    description: List of entities with available fields
     
 paths:
-  /callbackUrls:
-    post:
-      tags:
-        - CallbackUrls
-      summary: Register a callbackUrl
-      description: Allows customers to register a callbackUrl with configurations.
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CallbackUrlRegistration'
-      responses:
-        '200':
-          description: CallbackUrl registered successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CallbackUrlRegistrationResponse'
-    get:
-      tags:
-        - CallbackUrls
-      summary: Get callbackUrl data
-      description: Retrieve callbackUrl data based on callbackUrl name or organization name.
-      parameters:
-        - name: callbackUrlName
-          in: query
-          description: CallbackUrl name
-          schema:
-            type: string
-        - name: orgName
-          in: query
-          description: Organization name
-          schema:
-            type: string
-      responses:
-        '200':
-          description: CallbackUrl data retrieved successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CallbackUrlDataResponse'
-  /callbackUrls/{callbackUrlId}:
-    delete:
-      tags:
-        - CallbackUrls
-      summary: Delete a callbackUrl
-      description: Delete a registered callbackUrl. If associated with any subscription, it won't be deleted.
-      parameters:
-        - name: callbackUrlId
-          in: path
-          description: Unique identifier of the registered callbackUrl
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: CallbackUrl deleted successfully
-        '400':
-          description: Bad request - CallbackUrl associated with a subscription
-    patch:
-      tags:
-        - CallbackUrls
-      summary: Update a callbackUrl
-      description: Update the details of a registered callbackUrl.
-      parameters:
-        - name: callbackUrlId
-          in: path
-          description: Unique identifier of the registered callbackUrl
-          required: true
-          schema:
-            type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CallbackUrlUpdateRequest'
-      responses:
-        '200':
-          description: CallbackUrl updated successfully
-  /callbackUrls/{callbackUrlId}/test:
-    post:
-      tags:
-        - CallbackUrls
-      summary: Test the callbackUrl
-      description: Allows customers to test a registered callbackUrl by echoing the message sent.
-      parameters:
-        - name: callbackUrlId
-          in: path
-          description: Unique identifier of the registered callbackUrl
-          required: true
-          schema:
-            type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CallbackUrlTestRequest'
-      responses:
-        '200':
-          description: CallbackUrl test successful
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CallbackUrlTestResponse'
   /subscriptions:
     post:
       tags:
@@ -132,7 +21,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Subscription'
+              $ref: '#/components/schemas/SubscriptionRequest'
       responses:
         '200':
           description: Subscription created successfully
@@ -152,6 +41,19 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SubscriptionListResponse'
+    patch:
+      tags:
+        - Subscriptions
+      summary: Update a subscription
+      description: Update the details of a specific subscription.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubscriptionUpdateRequest'
+      responses:
+        '200':
+          description: Subscription updated successfully
   /subscriptions/{subscriptionId}:
     get:
       tags:
@@ -187,6 +89,13 @@ paths:
       responses:
         '200':
           description: Subscription deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  subscriptionId:
+                    type: string
         '400':
           description: Bad request - Subscription associated with a callbackUrl
     patch:
@@ -205,440 +114,208 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SubscriptionUpdateRequest'
+              $ref: '#/components/schemas/Subscription'
       responses:
         '200':
           description: Subscription updated successfully
+  
+  /subscriptions/{subscriptionId}/test:
+    get:
+      tags:
+        - Subscriptions
+      description: End point to test the subscription.
+      parameters:
+        - name: subscriptionId
+          in: path
+          description: Unique identifier of the subscription
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  customResponse:
+                    type: object
+                  metaData:
+                    type: object
+                    properties:
+                      entity:
+                        type: string
+                        enum:
+                          - daily
+                          - health
+                          - hourly
+                          - local_hourly
+                          - sentek_daily
+                          - sentek_hourly
+                      timeStamp:
+                        type: string
+                        description: Sent Time stamp
+                      subscriptionId:
+                        type: string
+                  data:
+                    type: array
+                    items:
+                      type: object
+
+  /subscriptions/health:
+    get:
+      tags:
+        - Subscriptions
+      description: Health data on Subscriptions
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    subscriptionId:
+                      type: string
+                    lastPublished:
+                      type: string
+                      description: Last published timestamp
+                    failureCount:
+                      type: integer
+                      description: How many failures happend since the subscription is active
+                    activeSince:
+                      type: string
+                      description: timestamp
+                    
+                  
+
   /metadata/entities:
     get:
       tags:
-        - Metadata Operations
-      summary: Get list of entity names
-      description: Retrieve a list of entity names that can be subscribed.
+        - Entities
+      description: 'Returns all the entities with column names'
       responses:
         '200':
-          description: List of entity names retrieved successfully
+          description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EntityListResponse'
-  /metadata/entities/merge-config:
-    post:
-      tags:
-        - Metadata Operations
-      summary: Create entities with merge logic
-      description: Create entities by defining merge logic for existing entities.
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/MergeConfigRequest'
-      responses:
-        '200':
-          description: Entities created successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MergeConfigResponse' 
-  /metadata/transformations:
-    get:
-      tags:
-        - Metadata Operations
-      summary: Get list of available transformations
-      description: Retrieve a list of transformations that can be applied on the response payload of a subscription.
-      responses:
-        '200':
-          description: List of transformations retrieved successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ColumnTransformationListResponse'
-  /subscription-events/last-published-record:
-    get:
-      tags:
-        - Subscription Events
-      summary: Get the last published record for a subscription
-      description: Retrieve the last published record for a subscription if the subscription ID is provided.
-      parameters:
-        - name: subscriptionId
-          in: query
-          description: Unique identifier of the subscription
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Last published record retrieved successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/LastPublishedRecordResponse'
-        '404':
-          description: No published records found for the given subscription
-  /subscription-events/publishing-delay:
-    get:
-      tags:
-        - Subscription Events
-      summary: Get the delay in publishing via callbackUrl
-      description: Retrieve the delay in publishing via callbackUrl for a subscription if the subscription ID is provided.
-      parameters:
-        - name: subscriptionId
-          in: query
-          description: Unique identifier of the subscription
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Publishing delay retrieved successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PublishingDelayResponse'
-        '404':
-          description: No published records found for the given subscription
-  /subscription-events/message-statistics:
-    get:
-      tags:
-        - Subscription Events
-      summary: Get message statistics for a subscription
-      description: Retrieve the number of messages pushed in a time window or the current rate of messages for a subscription if the subscription ID is provided.
-      parameters:
-        - name: subscriptionId
-          in: query
-          description: Unique identifier of the subscription
-          required: true
-          schema:
-            type: string
-        - name: timeWindow
-          in: query
-          description: Time window for message statistics (in seconds)
-          required: false
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: Message statistics retrieved successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MessageStatisticsResponse'
-        '404':
-          description: No published records found for the given subscription
-  /environment-promotions/promote-subscription:
-    post:
-      tags:
-        - Environment Promotions
-      summary: Promote subscription to a different environment
-      description: Promote a subscription, along with its associated callbackUrl, to a specified environment.
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PromotionRequest'
-      responses:
-        '200':
-          description: Subscription promoted successfully
-
+                $ref: "#/components/schemas/Entity"
+  # /schemas/entities:
+  #   $ref: "#/paths/~1metadata/entities"
+                
+  
 components:
   schemas:
-    CallbackUrlRegistration:
+    Field: 
+      oneOf:
+        - type: string
+        - type: object
+          properties:
+            field: 
+              type: string
+            name:
+              type: object
+              properties:
+                target:
+                  type: string
+            unitConversion:
+              type: string #check whether we can give an enum
+    Callback:
       type: object
       properties:
         url:
           type: string
-        retryCount:
+        retryCount: 
           type: integer
-        authHeader:
-          type: string
-        customHeaders:
-          type: object
-        useCustomSSL:
-          type: boolean
-        customSSLCertificate:
-          type: string
-          format: binary
-    CallbackUrlUpdateRequest:
-      type: object
-      properties:
-        url:
-          type: string
-        retryCount:
-          type: integer
-        authHeader:
-          type: string
-        customHeaders:
-          type: object
-        useCustomSSL:
-          type: boolean
-        customSSLCertificate:
-          type: string
-          format: binary
-    CallbackUrlRegistrationResponse:
-      type: object
-      properties:
-        callbackUrlId:
-          type: string
-    CallbackUrlTestRequest:
-      type: object
-      properties:
-        message:
-          type: string
-    CallbackUrlTestResponse:
-      type: object
-      properties:
-        echoedMessage:
-          type: string
-    CallbackUrlDataResponse:
-      type: object
-      properties:
-        callbackUrlId:
-          type: string
-        url:
-          type: string
-        retryCount:
-          type: integer
-        authHeader:
-          type: string
-        customHeaders:
-          type: object
-        useCustomSSL:
-          type: boolean
-        tokenValidity:
-          type: integer
+        headers:
+          allOf:
+            - type: object
+              properties:
+                authorization:
+                  type: string
+                accept:
+                  type: string
+                  enum:
+                    - application/json
+                    - text/csv
+            - type: object
     Subscription:
       type: object
       properties:
         name:
           type: string
-        orgName:
+        entity:
           type: string
-        teamName:
-          type: string
-        subscribedEntityName:
-          type: string
-        callbackUrlName:
-          type: string
-        metadataResponse:
-          type: object
-        columnTransformationConfig:
+          enum:
+            - daily
+            - health
+            - hourly
+            - local_hourly
+            - sentek_daily
+            - sentek_hourly
+        fields:
           type: array
           items:
-            $ref: '#/components/schemas/ColumnTransformation'
-        columnFilterConfig:
-          type: array
-          items:
-            $ref: '#/components/schemas/ColumnFilter'
+            type: string
+            # $ref: '#/components/schemas/Field'
+        callback:
+          $ref: '#/components/schemas/Callback'
         status:
           type: string
           enum:
             - active
-            - paused
             - inactive
-    SubscriptionResponse:
+        customResponse:
+          type: object
+    SubscriptionRequest:
       type: object
-      properties:
-        subscriptionId:
-          type: string
+      $ref: '#/components/schemas/Subscription'
+    SubscriptionResponse:
+      allOf:
+        - type: object
+          properties:
+            subscriptionId:
+              type: string
+        - $ref: '#/components/schemas/Subscription'
     SubscriptionListResponse:
       type: array
       items:
-        $ref: '#/components/schemas/Subscription'
-    SubscriptionUpdateRequest:
-      type: object
-      properties:
-        name:
-          type: string
-        orgName:
-          type: string
-        teamName:
-          type: string
-        subscribedEntityName:
-          type: string
-        callbackUrlName:
-          type: string
-        metadataResponse:
-          type: object
-        columnTransformationConfig:
-          type: array
-          items:
-            $ref: '#/components/schemas/ColumnTransformation'
-        columnFilterConfig:
-          type: array
-          items:
-            $ref: '#/components/schemas/ColumnFilter'
-        status:
-          type: string
-          enum:
-            - active
-            - paused
-            - inactive
-    CallbackUrlAssignmentRequest:
-      type: object
-      properties:
-        callbackUrlId:
-          type: string
-    ColumnTransformation:
-      type: object
-      properties:
-        sourceColumn:
-          type: string
-        transformationName:
-          type: string
-        nameTransformation: 
-          type: object
-          properties:
-            targetColumnName:
-              type: string
-        unitTransformation:
-          type: object
-          properties:
-            isCurrentColumnRequired:
-              type: boolean
-            targetColumns:
-              type: array
-              items:
-                type: object
-                properties:
-                  targetUnit:
-                    type: string
-                  targetColumnName:
-                    type: string
-        valueReplaceTransformation:
-          type: array
-          items:
-            type: object
+        allOf:
+          - type: object
             properties:
-              operationType:
+              subscriptionId:
                 type: string
-                enum:
-                  - GreaterThan, GreaterThanAndEqualTo, LessThan, LessThanAndEqualTo, EqualTo
-              value:
-                type: string
-              dataType:
-                type: string
-                enum:
-                  - string
-                  - integer
-                  - decimal
-        valueFormatTransformation:
-          type: object
-          properties:
-            targetFormatType:
-              type: string
-              enum:
-                - DateFormat_%Y-%m-%dT%H:%M:%S%z
-                - StringTrim
-              
-                
-        
-    ColumnTransformationListResponse:
+          - $ref: '#/components/schemas/Subscription'
+
+    SubscriptionUpdateRequest:
       type: array
       items:
-        $ref: '#/components/schemas/ColumnTransformation'
-    EntityAttributeResponse:
+        allOf:
+          - properties:
+              subscriptionId:
+                type: string
+          - $ref: '#/components/schemas/Subscription' 
+
+    Entity:
       type: object
       properties:
         name:
-          type: string
-        datatype:
-          type: string
-    EntityResponse:
-      type: object
-      properties:
-        name:
-          type: string
-        type: 
           type: string
           enum:
-              - single entity
-              - merged entity
-        columns:
+            - daily
+            - health
+            - hourly
+            - local_hourly
+            - sentek_daily
+            - sentek_hourly
+        fields:
           type: array
           items:
-            $ref: '#/components/schemas/EntityAttributeResponse'
-    EntityListResponse:
-      type: array
-      items:
-        $ref: '#/components/schemas/EntityResponse'  # Define the structure of the entity names list
-    MergeConfigJoinRequest:
-      type: object
-      properties:
-        mergeFieldSource:
-          type: string
-        mergeFieldTarget:
-          type: string
-        mergeOperation:
-          type: string 
-    MergeConfigRequest:
-      type: object
-      properties:
-        entityName:
-          type: string
-        sourceEntity:
-          type: string
-        targetEntity:
-          type: string
-        mergeOperation:
-          type: array 
-          items:
-            $ref: '#/components/schemas/MergeConfigJoinRequest' # Define the structure of the merge config
-    MergeConfigResponse:
-      type: object
-      properties:
-        mergeConfigId:
-          type: string  # Define the structure of the merge config response
-    LastPublishedRecordResponse:
-      type: object
-      properties:
-        lastPublishedRecord:
-          type: object  # Define the structure of the last published record
-    PublishingDelayResponse:
-      type: object
-      properties:
-        publishingDelay:
-          type: integer  # Define the structure of the publishing delay
-    MessageStatisticsResponse:
-      type: object
-      properties:
-        messageCount:
-          type: integer  # Define the structure of the message statistics
-        currentRate:
-          type: number   # Define the structure of the current rate
-    PromotionRequest:
-      type: object
-      properties:
-        subscriptionId:
-          type: string
-          description: Unique identifier of the subscription to be promoted
-        arableEnvironmentName:
-          type: string
-          description: Name of the target environment for promotion
-          enum:
-            - Prod(ALP)
-            - Stage(ALS)
-            - Test(ALT)
-            - Dev(ALD)
-    ColumnFilter:
-      type: object
-      properties:
-        sourceColumnName:
-          type: string
-        operationType:
-          type: string
-          enum:
-            - GreaterThan, GreaterThanAndEqualTo, LessThan, LessThanAndEqualTo, EqualTo, Contains
-        value:
-          type: string
-        dataType:
-          type: string
-          enum:
-            - string
-            - integer
-            - decimal
-        
-        
-
+            type: string
 servers:
   # Added by API Auto Mocking Plugin
   # Added by API Auto Mocking Plugin
